@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+import React from 'react';
+import { useForm, ValidationError } from '@formspree/react';
 import GithubIcon from "../../../public/github-icon.svg";
 import LinkedinIcon from "../../../public/linkedin-icon.svg";
 import Whatsapp from "../../../public/whatsapp.svg";
@@ -7,35 +8,13 @@ import Link from "next/link";
 import Image from "next/image";
 
 const EmailSection = () => {
-  const [emailSubmitted, setEmailSubmitted] = useState(false);
+  const [state, handleSubmit] = useForm("mvoeryep");
+  const [emailSubmitted, setEmailSubmitted] = React.useState(false);
 
-  const handleSubmit = async (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    const data = {
-      email: e.target.email.value,
-      subject: e.target.subject.value,
-      message: e.target.message.value,
-    };
-    const JSONdata = JSON.stringify(data);
-    const endpoint = "/api/send";
-
-    // Form the request for sending data to the server.
-    const options = {
-      // The method is POST because we are sending data.
-      method: "POST",
-      // Tell the server we're sending JSON.
-      headers: {
-        "Content-Type": "application/json",
-      },
-      // Body of the request is the JSON data we created above.
-      body: JSONdata,
-    };
-
-    const response = await fetch(endpoint, options);
-    const resData = await response.json();
-
-    if (response.status === 200) {
-      console.log("Message sent.");
+    await handleSubmit(e);
+    if (state.succeeded) {
       setEmailSubmitted(true);
     }
   };
@@ -51,7 +30,6 @@ const EmailSection = () => {
           Let&apos;s Connect
         </h5>
         <p className="text-[#ADB7BE] mb-4 max-w-md">
-          {" "}
           I&apos;m currently looking for new opportunities, my inbox is always
           open. Whether you have a question or just want to say hi, I&apos;ll
           try my best to get back to you!
@@ -74,7 +52,12 @@ const EmailSection = () => {
             Email sent successfully!
           </p>
         ) : (
-          <form className="flex flex-col" onSubmit={handleSubmit}>
+          <form
+            className="flex flex-col"
+            onSubmit={onSubmit}
+            action="https://formspree.io/f/mvoeryep"
+            method="POST"
+          >
             <div className="mb-6">
               <label
                 htmlFor="email"
@@ -83,12 +66,17 @@ const EmailSection = () => {
                 Your email
               </label>
               <input
-                name="email"
-                type="email"
                 id="email"
+                type="email"
+                name="email"
                 required
                 className="bg-[#18191E] border border-[#33353F] placeholder-[#9CA2A9] text-gray-100 text-sm rounded-lg block w-full p-2.5"
                 placeholder="jacob@google.com"
+              />
+              <ValidationError
+                prefix="Email"
+                field="email"
+                errors={state.errors}
               />
             </div>
             <div className="mb-6">
@@ -99,7 +87,7 @@ const EmailSection = () => {
                 Subject
               </label>
               <input
-                name="subject"
+                name="_subject"
                 type="text"
                 id="subject"
                 required
@@ -120,9 +108,15 @@ const EmailSection = () => {
                 className="bg-[#18191E] border border-[#33353F] placeholder-[#9CA2A9] text-gray-100 text-sm rounded-lg block w-full p-2.5"
                 placeholder="Let's talk about..."
               />
+              <ValidationError
+                prefix="Message"
+                field="message"
+                errors={state.errors}
+              />
             </div>
             <button
               type="submit"
+              disabled={state.submitting}
               className="bg-primary-500 hover:bg-primary-600 text-white font-medium py-2.5 px-5 rounded-lg w-full"
             >
               Send Message
